@@ -1,4 +1,4 @@
-# PRD: IdeaCrusher - Devil's Advocate + GitHub Scout OpenClaw Skill
+# PRD: Devil's Claw - Devil's Advocate + GitHub Scout OpenClaw Skill
 
 ## Context
 Building a combined OpenClaw skill for the SURGE x OpenClaw Hackathon (deadline: March 1, 2026). The skill takes a startup/app idea via Telegram, performs competitive market analysis to tear it apart, then finds relevant GitHub repos so you can start building smarter. Target build time: ~3-4 hours using Claude, Cursor, and agentic coding tools.
