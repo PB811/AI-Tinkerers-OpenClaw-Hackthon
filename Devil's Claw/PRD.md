@@ -7,7 +7,7 @@ Building a combined OpenClaw skill for the SURGE x OpenClaw Hackathon (deadline:
 
 ## Product Overview
 
-**Name:** IdeaCrusher (working title)
+**Name:** Devil's Claw
 
 **One-liner:** Send your idea on Telegram. Whether it's a startup or a side project, get a reality check with real data, then armed with the GitHub repos to build it better.
 
@@ -70,7 +70,7 @@ Phase 1a: Market Analysis              Phase 1b: Similar Projects
 
 ### Phase 2: GitHub Repo Scout
 - Take the same idea + keywords extracted from Phase 1
-- Search GitHub API (`GET /search/repositories`) for related repos
+- Use **GitHub MCP** (`search_repositories` tool) to find related repos — no custom script needed
 - Return top 5-8 repos sorted by stars/relevance
 - For each repo: name, URL, stars, last updated, 2-line summary of how it's useful
 - Categorize repos (e.g., "Full solutions", "Useful libraries", "Reference implementations")
@@ -152,13 +152,13 @@ Start here: [recommended repo + why]
 ~/clawd/
   ├── SOUL.md                    # Devil's Advocate persona
   ├── skills/
-  │   └── idea-crusher/
+  │   └── devils-claw/
   │       ├── SKILL.md           # Skill definition + instructions
   │       └── tools/
   │           ├── market_search.py    # Tavily API integration
-  │           ├── github_scout.py     # GitHub API integration
   │           └── pyproject.toml      # uv-managed dependencies
 ```
+Note: GitHub search is handled via **GitHub MCP** — no `github_scout.py` needed.
 
 ### Key Files to Create
 
@@ -167,22 +167,23 @@ Start here: [recommended repo + why]
 - Rules: Always back claims with search data, always end with actionable pivots
 - Tone: Direct, no sugar-coating, but ultimately helpful
 
-#### 2. `skills/idea-crusher/SKILL.md` - Skill Definition
+#### 2. `skills/devils-claw/SKILL.md` - Skill Definition
 ```yaml
 ---
-name: idea-crusher
+name: devils-claw
 version: 1.0.0
 description: Tears apart your startup idea with market data, then arms you with GitHub repos
 requires:
   - tavily-api-key
-  - github-token
+  - github-mcp
+  - openrouter-api-key
 ---
 ```
 - Step-by-step instructions for the agent:
   1. Extract keywords from the idea
-  2. Call market_search tool with keywords
+  2. Call market_search tool with keywords (Tavily)
   3. Analyze results and generate tear-down
-  4. Call github_scout tool with refined keywords
+  4. Call GitHub MCP `search_repositories` with refined keywords
   5. Format and return combined response
 
 #### 3. `tools/market_search.py` - Tavily Web Search
@@ -192,17 +193,10 @@ requires:
 - Input: search query string
 - Output: list of {title, url, snippet, relevance_score}
 
-#### 4. `tools/github_scout.py` - GitHub Repo Search
-- Uses GitHub REST API (`GET https://api.github.com/search/repositories`)
-- No auth needed for basic search (60 req/hr), or use token for 5,000 req/hr
-- Dependencies: `httpx` (managed via uv)
-- Input: search query, sort by stars
-- Output: list of {name, url, description, stars, updated_at, language}
-
-#### 5. `tools/pyproject.toml` - uv Package Management
+#### 4. `tools/pyproject.toml` - uv Package Management
 ```toml
 [project]
-name = "idea-crusher-tools"
+name = "devils-claw-tools"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
@@ -214,11 +208,11 @@ dependencies = [
 - Use `uv run` to execute tool scripts
 
 ### API Keys Required
-| Service | Free Tier | Signup |
-|---------|-----------|--------|
-| Tavily | 1,000 searches/mo | https://tavily.com |
-| GitHub | 60 req/hr (unauthenticated) | Optional token for higher limits |
-| LLM (Claude/OpenAI) | Via OpenClaw config | Already configured in OpenClaw |
+| Service | Purpose | Notes |
+|---------|---------|-------|
+| Tavily | Web search for competitors/similar projects | Free tier: 1,000 searches/mo |
+| GitHub MCP | Repo search via MCP tool calls | Replaces github_scout.py; needs GitHub token |
+| OpenRouter | LLM provider | Configured in OpenClaw as LLM backend |
 
 ### Environment Setup (Linux + Docker)
 ```bash
@@ -232,19 +226,20 @@ cd openclaw
 # 3. Run onboarding
 ./openclaw onboard
 # -> Select Telegram channel (requires Telegram Bot Token from @BotFather)
-# -> Configure LLM provider (Claude API recommended)
+# -> Configure LLM provider (OpenRouter — set base URL + API key)
 
 # 4. Start with Docker Compose
 docker compose up -d
 
 # 5. Copy skill files & install Python deps
-cp -r idea-crusher/ ~/clawd/skills/
-cd ~/clawd/skills/idea-crusher/tools
+cp -r devils-claw/ ~/clawd/skills/
+cd ~/clawd/skills/devils-claw/tools
 uv sync
 
 # 6. Set API keys in .env
 TAVILY_API_KEY=your_key_here
-GITHUB_TOKEN=your_token_here  # optional
+GITHUB_TOKEN=your_token_here       # required for GitHub MCP
+OPENROUTER_API_KEY=your_key_here   # LLM provider
 ```
 
 ### Telegram Bot Setup
@@ -266,7 +261,7 @@ GITHUB_TOKEN=your_token_here  # optional
 | 0:00-0:30 | OpenClaw Docker setup + Telegram channel config | Linux laptop, terminal |
 | 0:30-1:00 | Write SOUL.md + SKILL.md (prompt engineering) | Claude/Cursor |
 | 1:00-1:30 | Build market_search.py (Tavily integration) | Claude/Cursor |
-| 1:30-2:00 | Build github_scout.py (GitHub API integration) | Claude/Cursor |
+| 1:30-2:00 | Configure GitHub MCP + wire into SKILL.md | Claude/Cursor |
 | 2:00-2:30 | Integration testing via Telegram, fix formatting | All laptops |
 | 2:30-3:00 | Polish output format, edge cases, demo prep | All laptops |
 
