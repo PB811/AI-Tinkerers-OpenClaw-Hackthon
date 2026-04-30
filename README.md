@@ -2,7 +2,7 @@
 
 > Send your idea on Telegram. Get a brutal reality check with real data, then get the GitHub repos to build it smarter.
 
-Built for the **SURGE x OpenClaw Hackathon** (March 2026).
+Built for the **AI Tinkerers OpenClaw Hackathon** (Feb 2026).
 
 ---
 
